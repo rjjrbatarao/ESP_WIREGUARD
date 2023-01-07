@@ -1,5 +1,7 @@
 #include "wireguard-platform.h"
-
+// fix reference for slow reconnection
+// https://github.com/trombik/esp_wireguard/pull/37/commits/9f4bd58bc9f2606421d0fcccc9e0f7f0360728b8#diff-63c14b0f8b4914a5595af9b8338ac0f5b03327c6dce169f322f5ce43d41bfab4
+#include <time.h>
 #include <stdlib.h>
 #include "crypto.h"
 #include "lwip/sys.h"
@@ -32,11 +34,14 @@ void wireguard_tai64n_now(uint8_t *output) {
   // 64 bit seconds from 1970 = 8 bytes
   // 32 bit nano seconds from current second
 
-  uint64_t _millis = sys_now();
-
+  //uint64_t _millis = sys_now();
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
   // Split into seconds offset + nanos
-  uint64_t seconds = 0x400000000000000aULL + (_millis / 1000);
-  uint32_t nanos = (_millis % 1000) * 1000;
+  //uint64_t seconds = 0x400000000000000aULL + (_millis / 1000);
+  //uint32_t nanos = (_millis % 1000) * 1000;
+  uint64_t seconds = 0x400000000000000aULL + tv.tv_sec;
+  uint32_t nanos = tv.tv_usec * 1000;
   U64TO8_BIG(output + 0, seconds);
   U32TO8_BIG(output + 8, nanos);
 }
